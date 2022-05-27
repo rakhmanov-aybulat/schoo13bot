@@ -64,17 +64,6 @@ class Repo:
 
                 return cursor.fetchall()
 
-    async def has_user_grade(self, chat_id: int) -> bool:
-        with self.conn as conn:
-            with conn.cursor() as cursor:
-                cursor.execute(
-                    '''
-                    SELECT grade_number
-                    FROM users
-                    WHERE chat_id = %s;
-                    ''', (chat_id,))
-                return cursor.fetchone()[0] is not None
-
     async def add_user_grade(
             self, chat_id, grade_number,
             grade_letter) -> None:
