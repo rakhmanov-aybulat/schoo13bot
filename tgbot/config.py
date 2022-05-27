@@ -14,7 +14,6 @@ class DbConfig:
 class TgBot:
     token: str
     admin_id: int
-    use_redis: bool
 
 
 @dataclass
@@ -39,7 +38,6 @@ def load_config(path: str):
         tg_bot=TgBot(
             token=tg_bot["token"],
             admin_id=int(tg_bot["admin_id"]),
-            use_redis=cast_bool(tg_bot.get("use_redis")),
         ),
         db=DbConfig(**config["db"]),
     )
