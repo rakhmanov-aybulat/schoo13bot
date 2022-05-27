@@ -16,17 +16,14 @@ async def user_start(m: types.Message, repo: Repo):
 
     try:
         await repo.add_user(chat_id, first_name, last_name, user_name)
+        await user_change_grade(m, repo)
     except UniqueViolation:
         await repo.update_user(chat_id, first_name, last_name, user_name)
-
-    if await repo.has_user_grade(chat_id):
         keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True)
         keyboard.add(types.KeyboardButton(text='Сколько минут до звонка?'))
         await m.answer(
             'Спроси меня: "Сколько минут до звонка?"',
             reply_markup=keyboard)
-    else:
-        await user_change_grade(m, repo)
 
 
 async def user_change_grade(m: types.Message, repo: Repo):
