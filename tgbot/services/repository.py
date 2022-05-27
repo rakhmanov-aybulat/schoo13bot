@@ -7,13 +7,27 @@ class Repo:
     def __init__(self, conn):
         self.conn = conn
 
-    # users
-    async def add_user(self, user_id) -> None:
-        """Store user in DB, ignore duplicates"""
-        # await self.conn.execute(
-        #     "INSERT INTO tg_users(userid) VALUES $1 ON CONFLICT DO NOTHING",
-        #     user_id,
-        # )
+    async def add_user(self, chat_id, first_name, last_name, user_name) -> None:
+        with self.conn as conn:
+            with conn.cursor() as cursor:  
+                cursor.execute(
+                    '''INSERT INTO users(chatid, firstname, lastname, username) 
+                    VALUES (%s, %s, %s, %s);''',
+                    (chat_id, first_name, last_name, user_name))
+                  
+        return
+
+    async def update_user(self, chat_id, first_name, last_name, user_name) -> None:
+        with self.conn as conn:
+            with conn.cursor() as cursor:
+                cursor.execute(
+                    '''UPDATE users SET 
+                        firstname = %s,
+                        lastname = %s,
+                        username = %s
+                        WHERE chatid = %s;''',
+                    (first_name, last_name, user_name, chat_id))
+
         return
 
     async def list_users(self) -> List[int]:
