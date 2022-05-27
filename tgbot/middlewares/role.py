@@ -1,6 +1,6 @@
 from aiogram.dispatcher.middlewares import LifetimeControllerMiddleware
 
-from tgbot.models.role import UserRole
+from ..models.role import UserRole
 
 
 class RoleMiddleware(LifetimeControllerMiddleware):

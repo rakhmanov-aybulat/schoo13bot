@@ -1,6 +1,6 @@
 from aiogram.dispatcher.middlewares import LifetimeControllerMiddleware
 
-from tgbot.services.repository import Repo
+from ..services.repository import Repo
 
 
 class DbMiddleware(LifetimeControllerMiddleware):

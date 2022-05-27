@@ -7,7 +7,7 @@ from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from tgbot.config import load_config
 from tgbot.filters.role import RoleFilter, AdminFilter
 from tgbot.handlers.admin import register_admin
-from tgbot.handlers.callbacks import register_callbacks
+from tgbot.handlers.grades import register_grades
 from tgbot.handlers.user import register_user
 from tgbot.middlewares.db import DbMiddleware
 from tgbot.middlewares.role import RoleMiddleware
@@ -55,7 +55,7 @@ async def main():
 
     register_admin(dp)
     register_user(dp)
-    register_callbacks(dp)
+    register_grades(dp)
 
     # start
     try:
