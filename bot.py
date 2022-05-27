@@ -19,13 +19,13 @@ logger = logging.getLogger(__name__)
 
 async def create_pool(host, database, user, port, password):
     return pool.SimpleConnectionPool(
-                    minconn=1, 
-                    maxconn=5, 
-                    host=host, 
-                    dbname=database,
-                    user=user,
-                    port=port,
-                    password=password)
+        minconn=1,
+        maxconn=5,
+        host=host,
+        dbname=database,
+        user=user,
+        port=port,
+        password=password)
 
 
 async def main():
@@ -43,7 +43,7 @@ async def main():
         database=config.db.database,
         user=config.db.user,
         port=config.db.port,
-        password=config.db.password, 
+        password=config.db.password,
     )
 
     bot = Bot(token=config.tg_bot.token)
