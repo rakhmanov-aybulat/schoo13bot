@@ -81,18 +81,17 @@ class Repo:
     async def add_user_grade(
             self, chat_id: int, grade_number: int,
             grade_letter: str) -> None:
+        grade = f'{grade_number}{grade_letter}'
         with self.conn as conn:
             with conn.cursor() as cursor:
                 cursor.execute(
                     '''
                     UPDATE users SET
-                    grade_number = %s,
-                    grade_letter = %s
+                    grade = %s
                     WHERE chat_id = %s;
-                    ''', (grade_number, grade_letter,
-                          chat_id))
+                    ''', (grade, chat_id))
 
-    async def get_current_and_next_events(self) -> CurrentAndNextEvents:
+    async def get_current_and_next_events(self, chat_id: int) -> CurrentAndNextEvents:
         today = datetime.datetime.today()
         current_time = today.time().isoformat(timespec='seconds')
         weekday = today.weekday()
@@ -118,15 +117,17 @@ class Repo:
                         next_event.event_start - %s
                         FROM event_schedule current_event
                         LEFT JOIN events_clarification current_event_clarification
-                        ON current_event_clarification.event_id = current_event.event_id,
+                        ON current_event_clarification.event_id = current_event.event_id
+                        AND current_event_clarification.grade = (SELECT grade FROM users WHERE chat_id = %s),
                         event_schedule next_event
                         LEFT JOIN events_clarification next_event_clarification
                         ON next_event_clarification.event_id = next_event.event_id
-                        WHERE current_event.weekday = %s
+                        AND next_event_clarification.grade = (SELECT grade FROM users WHERE chat_id = %s)
+                        WHERE current_event.next_event_id = next_event.event_id
+                        AND current_event.weekday = %s
                         AND current_event.event_start <= %s
-                        AND current_event.event_end >= %s
-                        AND next_event.event_id = current_event.next_event_id;
-                    ''', (current_time, weekday, current_time, current_time))
+                        AND current_event.event_end >= %s;
+                    ''', (current_time, chat_id, chat_id, weekday, current_time, current_time))
 
                 res = cursor.fetchone()
                 if res is None:
@@ -135,4 +136,5 @@ class Repo:
                 current_event = Event(*res[0:7])
                 next_event = Event(*res[7:14])
                 delta = res[14]
+
                 return CurrentAndNextEvents(current_event, next_event, delta)

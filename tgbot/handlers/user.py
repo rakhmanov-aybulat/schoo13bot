@@ -38,7 +38,7 @@ def convert_seconds(seconds: int) -> str:
 
 async def user_get_schedule(m: types.Message, repo: Repo) -> None:
     try:
-        current_and_next_events = await repo.get_current_and_next_events()
+        current_and_next_events = await repo.get_current_and_next_events(m.chat.id)
         text = format_current_and_next_events(current_and_next_events)
     except CantGetCurrentAndNextEvents:
         text = 'Уроков нет, можно отдохнуть'
