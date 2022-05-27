@@ -1,3 +1,4 @@
+import datetime
 from typing import List
 
 
@@ -87,3 +88,34 @@ class Repo:
                     WHERE chat_id = %s;
                     ''', (grade_number, grade_letter,
                           chat_id))
+
+    async def get_current_and_next_events(self) -> tuple:
+        today = datetime.datetime.today()
+        time = today.time().isoformat(timespec='seconds')
+        weekday = today.weekday()
+
+        with self.conn:
+            with self.conn.cursor() as cursor:
+                cursor.execute(
+                    '''
+                        SELECT current_event.event_name,
+                        current_event_clarification.event_clarification,
+                        next_event.event_name,
+                        next_event_clarification.event_clarification,
+                        next_event.event_start - %s
+                        FROM event_schedule current_event
+                        LEFT JOIN events_clarification current_event_clarification
+                        ON current_event_clarification.event_id = current_event.event_id,
+                        event_schedule next_event
+                        LEFT JOIN events_clarification next_event_clarification
+                        ON next_event_clarification.event_id = next_event.event_id
+                        WHERE current_event.weekday = %s
+                        AND current_event.event_start <= %s
+                        AND current_event.event_end >= %s
+                        AND next_event.event_id = current_event.next_event_id;
+                    ''', (time, weekday, time, time))
+
+                event = cursor.fetchone()
+                if event is None:
+                    event = ('можно отдохнуть', None, None, None, None)
+                return event

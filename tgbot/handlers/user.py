@@ -40,7 +40,40 @@ async def user_change_grade(m: types.Message, repo: Repo):
     await m.answer('В каком классе ты учишься?', reply_markup=keyboard)
 
 
+def convert_seconds(seconds: int) -> str:
+    hours = seconds // 3600
+    minutes = (seconds - hours * 3600) // 60
+    return (
+        f'{str(hours) + " ч." if hours else ""}'
+        f'{str(minutes) + " мин." if minutes else ""}')
+
+
+async def user_get_schedule(m: types.Message, repo: Repo):
+    (current_event_name,
+     current_event_clarification,
+     next_event_name,
+     next_event_clarification,
+     delta) = await repo.get_current_and_next_events()
+
+    text = f'Сейчас {current_event_name}'
+
+    if current_event_clarification is not None:
+        text += f'{"(" + current_event_clarification + ")"}'
+
+    if next_event_name is not None and delta is not None:
+        text += f', {next_event_name}'
+
+        if next_event_clarification is not None:
+            text += "(" + next_event_clarification + ")"
+
+        text += f' через {convert_seconds(delta.seconds)}'
+
+    await m.answer(text)
+
+
 def register_user(dp: Dispatcher):
     dp.register_message_handler(user_start, commands=['start'], state='*')
     dp.register_message_handler(user_change_grade, commands=[
                                 'changegrade'], state='*')
+    dp.register_message_handler(
+        user_get_schedule, text='Сколько минут до звонка?')
