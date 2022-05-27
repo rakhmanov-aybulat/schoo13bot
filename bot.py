@@ -11,11 +11,20 @@ from tgbot.handlers.user import register_user
 from tgbot.middlewares.db import DbMiddleware
 from tgbot.middlewares.role import RoleMiddleware
 
+from psycopg2 import pool
+
 logger = logging.getLogger(__name__)
 
 
-def create_pool(user, password, database, host, echo):
-    raise NotImplementedError  # TODO check your db connector
+async def create_pool(host, database, user, port, password):
+    return pool.SimpleConnectionPool(
+                    minconn=1, 
+                    maxconn=5, 
+                    host=host, 
+                    dbname=database,
+                    user=user,
+                    port=port,
+                    password=password)
 
 
 async def main():
@@ -29,11 +38,11 @@ async def main():
     storage = MemoryStorage()
 
     pool = await create_pool(
-        user=config.db.user,
-        password=config.db.password,
-        database=config.db.database,
         host=config.db.host,
-        echo=False,
+        database=config.db.database,
+        user=config.db.user,
+        port=config.db.port,
+        password=config.db.password, 
     )
 
     bot = Bot(token=config.tg_bot.token)

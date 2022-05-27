@@ -5,9 +5,10 @@ from dataclasses import dataclass
 @dataclass
 class DbConfig:
     host: str
-    password: str
-    user: str
     database: str
+    user: str
+    port: str
+    password: str
 
 
 @dataclass

@@ -11,7 +11,7 @@ class DbMiddleware(LifetimeControllerMiddleware):
         self.pool = pool
 
     async def pre_process(self, obj, data, *args):
-        db = await self.pool.acquire()
+        db = self.pool.getconn()
         data["db"] = db
         data["repo"] = Repo(db)
 
@@ -19,4 +19,4 @@ class DbMiddleware(LifetimeControllerMiddleware):
         del data["repo"]
         db = data.get("db")
         if db:
-            await db.close()
+            self.pool.putconn(db)
