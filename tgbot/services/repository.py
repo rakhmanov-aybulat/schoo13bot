@@ -113,8 +113,7 @@ class Repo:
                         next_event.weekday,
                         next_event.event_start,
                         next_event.event_end,
-                        next_event.next_event_id,
-                        next_event.event_start - %s
+                        next_event.next_event_id
                         FROM event_schedule current_event
                         LEFT JOIN events_clarification current_event_clarification
                         ON current_event_clarification.event_id = current_event.event_id
@@ -126,15 +125,22 @@ class Repo:
                         WHERE current_event.next_event_id = next_event.event_id
                         AND current_event.weekday = %s
                         AND current_event.event_start <= %s
-                        AND current_event.event_end >= %s;
-                    ''', (current_time, chat_id, chat_id, weekday, current_time, current_time))
+                        AND current_event.event_end >= %s
+                        OR current_event.next_event_id is null
+                        AND current_event.weekday = %s
+                        AND current_event.event_start <= %s
+                        AND current_event.event_end >= %s
+                    ''', (chat_id, chat_id, weekday,
+                          current_time, current_time, weekday,
+                          current_time, current_time))
 
                 res = cursor.fetchone()
                 if res is None:
                     raise CantGetCurrentAndNextEvents
 
                 current_event = Event(*res[0:7])
-                next_event = Event(*res[7:14])
-                delta = res[14]
+                next_event = Event(*res[7:])
+                if current_event.next_event_id is None:
+                    next_event = None
 
-                return CurrentAndNextEvents(current_event, next_event, delta)
+                return CurrentAndNextEvents(current_event, next_event)
