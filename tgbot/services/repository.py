@@ -100,47 +100,48 @@ class Repo:
             with self.conn.cursor() as cursor:
                 cursor.execute(
                     '''
-                        SELECT current_event.event_id,
-                        current_event.event_name,
-                        current_event_clarification.event_clarification,
-                        current_event.weekday,
-                        current_event.event_start,
-                        current_event.event_end,
-                        current_event.next_event_id,
-                        next_event.event_id,
-                        next_event.event_name,
-                        next_event_clarification.event_clarification,
-                        next_event.weekday,
-                        next_event.event_start,
-                        next_event.event_end,
-                        next_event.next_event_id
-                        FROM event_schedule current_event
-                        LEFT JOIN events_clarification current_event_clarification
-                        ON current_event_clarification.event_id = current_event.event_id
-                        AND current_event_clarification.grade = (SELECT grade FROM users WHERE chat_id = %s),
-                        event_schedule next_event
-                        LEFT JOIN events_clarification next_event_clarification
-                        ON next_event_clarification.event_id = next_event.event_id
-                        AND next_event_clarification.grade = (SELECT grade FROM users WHERE chat_id = %s)
-                        WHERE current_event.next_event_id = next_event.event_id
-                        AND current_event.weekday = %s
-                        AND current_event.event_start <= %s
-                        AND current_event.event_end >= %s
-                        OR current_event.next_event_id is null
-                        AND current_event.weekday = %s
-                        AND current_event.event_start <= %s
-                        AND current_event.event_end >= %s
-                    ''', (chat_id, chat_id, weekday,
-                          current_time, current_time, weekday,
-                          current_time, current_time))
+                        SELECT es.event_id,
+                        es.event_name,
+                        ec.event_clarification,
+                        es.weekday,
+                        es.event_start,
+                        es.event_end,
+                        es.next_event_id
+                        FROM event_schedule es
+                        LEFT JOIN events_clarification ec
+                        ON es.event_id = ec.event_id
+                        AND ec.grade = (SELECT grade FROM users WHERE chat_id = %s)
+                        WHERE es.weekday = %s
+                        AND es.event_start <= %s
+                        AND es.event_end >= %s
+                    ''', (chat_id, weekday, current_time, current_time))
 
                 res = cursor.fetchone()
-                if res is None:
-                    raise CantGetCurrentAndNextEvents
+                current_event = None if res is None else Event(*res)
 
-                current_event = Event(*res[0:7])
-                next_event = Event(*res[7:])
-                if current_event.next_event_id is None:
-                    next_event = None
+                cursor.execute(
+                    '''
+                        SELECT es.event_id,
+                        es.event_name,
+                        ec.event_clarification,
+                        es.weekday,
+                        es.event_start,
+                        es.event_end,
+                        es.next_event_id
+                        FROM event_schedule es
+                        LEFT JOIN events_clarification ec
+                        ON es.event_id = ec.event_id
+                        AND ec.grade = (SELECT grade FROM users WHERE chat_id = %s)
+                        WHERE es.weekday = %s
+                        AND es.event_start >= %s
+                        ORDER BY event_start
+                        LIMIT 1;
+                    ''', (chat_id, weekday, current_event.end if current_event else current_time))
+
+                res2 = cursor.fetchone()
+                next_event = None if res2 is None else Event(*res2)
+
+                if current_event is None and next_event is None:
+                    raise CantGetCurrentAndNextEvents
 
                 return CurrentAndNextEvents(current_event, next_event)

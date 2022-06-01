@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Union
 
-from datetime import time, timedelta
+from datetime import time
 
 
 @dataclass
