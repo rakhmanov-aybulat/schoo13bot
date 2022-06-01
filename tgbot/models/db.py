@@ -12,7 +12,6 @@ class Event:
     weekday: int
     start: time
     end: time
-    next_event_id: Union[int, None]
 
 
 @dataclass()

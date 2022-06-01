@@ -105,8 +105,7 @@ class Repo:
                         ec.event_clarification,
                         es.weekday,
                         es.event_start,
-                        es.event_end,
-                        es.next_event_id
+                        es.event_end
                         FROM event_schedule es
                         LEFT JOIN events_clarification ec
                         ON es.event_id = ec.event_id
@@ -126,8 +125,7 @@ class Repo:
                         ec.event_clarification,
                         es.weekday,
                         es.event_start,
-                        es.event_end,
-                        es.next_event_id
+                        es.event_end
                         FROM event_schedule es
                         LEFT JOIN events_clarification ec
                         ON es.event_id = ec.event_id
