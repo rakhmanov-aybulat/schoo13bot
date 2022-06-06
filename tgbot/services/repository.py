@@ -1,7 +1,9 @@
 import datetime
 from typing import Tuple, Union
 
-from ..exceptions import CantGetCurrentAndNextEvents, CantGetGradeLetterList, CantGetGradeNumberList
+from ..exceptions import CantGetCurrentAndNextEvents, \
+    CantGetGradeLetterList, CantGetGradeNumberList, \
+    CantGetEventList, CantGetGradeList
 from ..models.db import Event, CurrentAndNextEvents
 
 
@@ -45,6 +47,21 @@ class Repo:
                           user_name, chat_id))
 
         return
+
+    async def get_grade_list(self) -> Tuple[str]:
+        with self.conn as conn:
+            with conn.cursor() as cursor:
+                cursor.execute(
+                    '''
+                    SELECT grade 
+                    FROM grades 
+                    ORDER BY grade_number, grade_letter;
+                    ''')
+                grades = cursor.fetchall()
+                if grades is None:
+                    raise CantGetGradeList
+
+                return tuple(map(lambda g: str(g[0]), grades))
 
     async def get_grade_number_list(self) -> Tuple[int, ...]:
         with self.conn as conn:
@@ -143,3 +160,21 @@ class Repo:
                     raise CantGetCurrentAndNextEvents
 
                 return CurrentAndNextEvents(current_event, next_event)
+
+    async def get_event_list(self) -> Tuple[Event]:
+        # returns a list of events sorted by time and day of the week
+        with self.conn as conn:
+            with conn.cursor() as cursor:
+                cursor.execute(
+                    '''
+                    SELECT event_id, event_name, 
+                    NULL, weekday, 
+                    event_start, event_end
+                    FROM event_schedule
+                    ORDER BY weekday, event_start;
+                    ''')
+                event_list = cursor.fetchall()
+                if event_list is None:
+                    raise CantGetEventList
+
+                return tuple(map(lambda e: Event(*e), event_list))
