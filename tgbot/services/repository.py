@@ -1,5 +1,7 @@
 import datetime
-from typing import Tuple, Union
+from typing import Tuple, Union, Iterable
+
+from psycopg2 import sql
 
 from ..exceptions import CantGetCurrentAndNextEvents, CantGetGradeLetterList, \
     CantGetGradeNumberList, CantGetEventList, CantGetGradeList
@@ -185,3 +187,20 @@ class Repo:
 
                 clarification_list = cursor.fetchall()
                 return tuple(map(lambda ec: EventClarification(*ec), clarification_list))
+
+    async def truncate_table(self, table_name: str) -> None:
+        with self.conn as conn:
+            with conn.cursor() as cursor:
+                cursor.execute(
+                    sql.SQL('TRUNCATE TABLE {}')
+                    .format(sql.Identifier(table_name)))
+
+    async def add_events_clarification(self, events_clarification_list: Iterable[EventClarification]) -> None:
+        with self.conn as conn:
+            with conn.cursor() as cursor:
+                for ec in events_clarification_list:
+                    cursor.execute(
+                        '''
+                        INSERT INTO events_clarification
+                        VALUES (%s, %s, %s)
+                        ''', (ec.event_id, ec.grade, ec.clarification))

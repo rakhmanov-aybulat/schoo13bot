@@ -23,14 +23,21 @@ async def start_changing_schedule(m: types.Message):
                    '/schedule_template - чтобы посмотреть шаблон')
 
 
-async def change_events_clarification(m: types.Message):
+async def change_events_clarification(m: types.Message, repo: Repo):
     file_name = 'clarification.xlsx'
 
     bot = Bot.get_current()
     await bot.download_file_by_id(m.document.file_id, file_name)
 
     clarification_list = parse_events_clarification_excel(file_name)
-    print(clarification_list)
+
+    await repo.truncate_table('events_clarification')
+    try:
+        await repo.add_events_clarification(clarification_list)
+    except Exception:
+        await m.answer('Что-то пошло не так ')
+    else:
+        await m.answer('Уточнения событий изменены')
 
     if os.path.exists(file_name):
         os.remove(file_name)
