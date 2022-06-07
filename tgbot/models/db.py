@@ -18,3 +18,10 @@ class Event:
 class CurrentAndNextEvents:
     current_event: Event
     next_event: Union[Event, None]
+
+
+@dataclass()
+class EventClarification:
+    event_id: int
+    grade: str
+    clarification: str

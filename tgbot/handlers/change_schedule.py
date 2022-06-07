@@ -1,4 +1,4 @@
-from typing import Iterable
+from typing import Dict, Iterable
 
 from aiogram import Dispatcher, types
 from openpyxl import Workbook
@@ -7,7 +7,7 @@ from openpyxl.styles import Alignment, Protection
 from openpyxl.utils.cell import get_column_letter
 from openpyxl.worksheet.worksheet import Worksheet
 
-from ..models.db import Event
+from ..models.db import Event, EventClarification
 from ..models.role import UserRole
 from ..services.repository import Repo
 
@@ -32,31 +32,47 @@ def align_column(column_index: int, alignment: Alignment, sheet: Worksheet) -> N
         cell.alignment = alignment
 
 
+def get_column_by_grade_dict(sheet: Worksheet) -> Dict[str, str]:
+    column_names = {}
+    for col in sheet.iter_cols():
+        if col[0].value is None:
+            continue
+        column_names[col[0].value] = col[0].column_letter
+    return column_names
+
+
 def create_excel_template(
-        file_name: str, grade_list: Iterable[str], event_list: Iterable[Event]):
+        file_name: str, grade_list: Iterable[str], event_list: Iterable[Event],
+        clarification_list: Iterable[EventClarification]):
     workbook = Workbook()
     sheet = workbook.active
     sheet.title = 'events'
 
+    # Add grades
     sheet.append([g for g in grade_list])
-    sheet.insert_cols(idx=1, amount=4)
+    sheet.insert_cols(idx=1, amount=5)
 
+    # Add events
     weekdays = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье']
+    for e in event_list:
+        sheet.append([weekdays[e.weekday], e.id, e.name, e.start, e.end])
 
-    for weekday in range(7):
-        there_are_entries = False
-        for e in event_list:
-            if e.weekday == weekday:
-                there_are_entries = True
-                sheet.append([weekdays[e.weekday], e.name, e.start, e.end])
+    # Add events clarifications
+    column_by_grade = get_column_by_grade_dict(sheet)
 
-        if not there_are_entries:
-            sheet.append([weekdays[weekday]])
+    for row in sheet[2:sheet.max_row]:
+        row_index = row[1].row
+        event_id = row[1].value
+        for c in clarification_list:
+            if c.event_id == event_id:
+                cell = f'{column_by_grade[c.grade]}{row_index}'
+                sheet[cell] = c.clarification
 
+    # Styling
     merge_cells_with_same_values_in_column(1, sheet)
-
     align_column(1, Alignment(horizontal='center', vertical='center'), sheet)
 
+    # Cells protection
     sheet.protection.sheet = True
     no_protection = Protection(locked=False)
     for row in sheet[f'E2:{get_column_letter(sheet.max_column)}{sheet.max_row}']:
@@ -69,8 +85,9 @@ def create_excel_template(
 async def send_schedule_template(m: types.Message, repo: Repo):
     grade_list = await repo.get_grade_list()
     event_list = await repo.get_event_list()
+    clarification_list = await repo.get_clarification_list()
     file_name = 'events.xlsx'
-    create_excel_template(file_name, grade_list, event_list)
+    create_excel_template(file_name, grade_list, event_list, clarification_list)
 
     file = types.InputFile(file_name, 'Расписание Шаблон.xlsx')
     await m.answer_document(file)
@@ -83,4 +100,3 @@ async def start_changing_schedule(m: types.Message):
 
 def register_change_schedule(dp: Dispatcher):
     dp.register_message_handler(send_schedule_template, commands=['schedule_template'], state='*', role=UserRole.ADMIN)
-

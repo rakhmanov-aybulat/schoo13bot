@@ -1,10 +1,9 @@
 import datetime
 from typing import Tuple, Union
 
-from ..exceptions import CantGetCurrentAndNextEvents, \
-    CantGetGradeLetterList, CantGetGradeNumberList, \
-    CantGetEventList, CantGetGradeList
-from ..models.db import Event, CurrentAndNextEvents
+from ..exceptions import CantGetCurrentAndNextEvents, CantGetGradeLetterList, \
+    CantGetGradeNumberList, CantGetEventList, CantGetGradeList
+from ..models.db import Event, CurrentAndNextEvents, EventClarification
 
 
 class Repo:
@@ -178,3 +177,11 @@ class Repo:
                     raise CantGetEventList
 
                 return tuple(map(lambda e: Event(*e), event_list))
+
+    async def get_clarification_list(self) -> Tuple[EventClarification]:
+        with self.conn as conn:
+            with conn.cursor() as cursor:
+                cursor.execute('SELECT * FROM events_clarification')
+
+                clarification_list = cursor.fetchall()
+                return tuple(map(lambda ec: EventClarification(*ec), clarification_list))
