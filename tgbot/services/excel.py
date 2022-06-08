@@ -42,7 +42,7 @@ def get_grade_by_column(sheet, column_letter: str) -> str:
     return sheet[f'{column_letter}1'].value
 
 
-def create_excel_template(
+def create_events_clarification_excel_template(
         file_name: str, grade_list: Iterable[str], event_list: Iterable[Event],
         clarification_list: Iterable[EventClarification]):
     workbook = Workbook()

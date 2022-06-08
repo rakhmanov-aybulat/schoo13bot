@@ -4,15 +4,15 @@ from aiogram import Bot, Dispatcher, types
 
 from ..models.role import UserRole
 from ..services.repository import Repo
-from ..services.excel import create_excel_template, parse_events_clarification_excel
+from ..services.excel import create_events_clarification_excel_template, parse_events_clarification_excel
 
 
-async def send_schedule_template(m: types.Message, repo: Repo):
+async def send_events_clarification_excel_template(m: types.Message, repo: Repo):
     grade_list = await repo.get_grade_list()
     event_list = await repo.get_event_list()
     clarification_list = await repo.get_clarification_list()
     file_name = 'events.xlsx'
-    create_excel_template(file_name, grade_list, event_list, clarification_list)
+    create_events_clarification_excel_template(file_name, grade_list, event_list, clarification_list)
 
     file = types.InputFile(file_name, 'Расписание Шаблон.xlsx')
     await m.answer_document(file)
@@ -37,6 +37,6 @@ async def change_events_clarification(m: types.Message):
 
 
 def register_change_schedule(dp: Dispatcher):
-    dp.register_message_handler(send_schedule_template, commands=['schedule_template'], state='*', role=UserRole.ADMIN)
+    dp.register_message_handler(send_events_clarification_excel_template, commands=['schedule_template'], state='*', role=UserRole.ADMIN)
     dp.register_message_handler(
         change_events_clarification, content_types=types.message.ContentType.DOCUMENT, state='*', role=UserRole.ADMIN)
