@@ -1,6 +1,6 @@
-from typing import Dict, Iterable
+from typing import Dict, Iterable, Tuple
 
-from openpyxl import Workbook
+from openpyxl import Workbook, load_workbook
 from openpyxl.cell.cell import Cell
 from openpyxl.styles import Alignment, Protection
 from openpyxl.utils.cell import get_column_letter
@@ -30,12 +30,16 @@ def align_column(column_index: int, alignment: Alignment, sheet: Worksheet) -> N
 
 
 def get_column_by_grade_dict(sheet: Worksheet) -> Dict[str, str]:
-    column_names = {}
+    column_by_grade = {}
     for col in sheet.iter_cols():
         if col[0].value is None:
             continue
-        column_names[col[0].value] = col[0].column_letter
-    return column_names
+        column_by_grade[col[0].value] = col[0].column_letter
+    return column_by_grade
+
+
+def get_grade_by_column(sheet, column_letter: str) -> str:
+    return sheet[f'{column_letter}1'].value
 
 
 def create_excel_template(
@@ -78,3 +82,18 @@ def create_excel_template(
 
     workbook.save(file_name)
 
+
+def parse_events_clarification_excel(file_name: str) -> Tuple[EventClarification]:
+    workbook = load_workbook(file_name)
+    sheet = workbook['events']
+
+    clarification_list = []
+    for row in sheet[2:sheet.max_row]:
+        event_id = row[1].value
+        for cell in row[5:]:
+            if cell.value is not None:
+                grade = get_grade_by_column(sheet, cell.column_letter)
+                clarification = EventClarification(event_id, grade, cell.value)
+                clarification_list.append(clarification)
+
+    return tuple(clarification_list)
