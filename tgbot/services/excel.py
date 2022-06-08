@@ -1,4 +1,4 @@
-from typing import Dict, Iterable, Tuple
+from typing import Iterable, Tuple
 
 from openpyxl import Workbook, load_workbook
 from openpyxl.cell.cell import Cell
@@ -29,16 +29,14 @@ def align_column(column_index: int, alignment: Alignment, sheet: Worksheet) -> N
         cell.alignment = alignment
 
 
-def get_column_by_grade_dict(sheet: Worksheet) -> Dict[str, str]:
-    column_by_grade = {}
-    for col in sheet.iter_cols():
-        if col[0].value is None:
-            continue
-        column_by_grade[col[0].value] = col[0].column_letter
-    return column_by_grade
+def get_column_letter_by_column_header(sheet: Worksheet, column_header: str) -> str:
+    for cell in sheet[1]:
+        if cell.value == column_header:
+            return cell.column_letter
+    raise LookupError(f'There isn\'t such column header: {column_header}')
 
 
-def get_grade_by_column(sheet, column_letter: str) -> str:
+def get_column_header_by_column_letter(sheet: Worksheet, column_letter: str) -> str:
     return sheet[f'{column_letter}1'].value
 
 
@@ -58,15 +56,14 @@ def create_events_clarification_excel_template(
     for e in event_list:
         sheet.append([weekdays[e.weekday], e.id, e.name, e.start, e.end])
 
-    # Add events clarifications
-    column_by_grade = get_column_by_grade_dict(sheet)
-
+    # Add events clarification
     for row in sheet[2:sheet.max_row]:
         row_index = row[1].row
         event_id = row[1].value
         for c in clarification_list:
             if c.event_id == event_id:
-                cell = f'{column_by_grade[c.grade]}{row_index}'
+                column_letter = get_column_letter_by_column_header(sheet, c.grade)
+                cell = f'{column_letter}{row_index}'
                 sheet[cell] = c.clarification
 
     # Styling
@@ -92,7 +89,7 @@ def parse_events_clarification_excel(file_name: str) -> Tuple[EventClarification
         event_id = row[1].value
         for cell in row[5:]:
             if cell.value is not None:
-                grade = get_grade_by_column(sheet, cell.column_letter)
+                grade = get_column_header_by_column_letter(sheet, cell.column_letter)
                 clarification = EventClarification(event_id, grade, cell.value)
                 clarification_list.append(clarification)
 
