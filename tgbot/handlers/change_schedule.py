@@ -1,10 +1,18 @@
 import os
 
 from aiogram import Bot, Dispatcher, types
+from aiogram.dispatcher import FSMContext
+from aiogram.dispatcher.filters.state import State, StatesGroup
 
 from ..models.role import UserRole
 from ..services.repository import Repo
 from ..services.excel import create_events_clarification_excel_template, parse_events_clarification_excel
+
+
+class ChangeSchedule(StatesGroup):
+    waiting_for_schedule_change_type = State()
+    waiting_for_events_excel = State()
+    waiting_for_events_clarification_excel = State()
 
 
 async def send_events_clarification_excel_template(m: types.Message, repo: Repo):
@@ -19,11 +27,35 @@ async def send_events_clarification_excel_template(m: types.Message, repo: Repo)
 
 
 async def start_changing_schedule(m: types.Message):
-    await m.answer('Отправь excel файл нового расписания.\n'
-                   '/schedule_template - чтобы посмотреть шаблон')
+    await ChangeSchedule.waiting_for_schedule_change_type.set()
+
+    markup = types.InlineKeyboardMarkup(row_width=1)
+    buttons = (
+        types.InlineKeyboardButton(
+            text='Изменть события', callback_data='schedule_change_type:events'),
+        types.InlineKeyboardButton(
+            text='Изменить уточнения событий', callback_data='schedule_change_type:events_clarification')
+    )
+    markup.add(*buttons)
+    await m.answer('Что именно изменить?', reply_markup=markup)
 
 
-async def change_events_clarification(m: types.Message, repo: Repo):
+async def schedule_change_type_chosen(call: types.CallbackQuery):
+    schedule_change_type = call.data.split(':')[-1]
+    if schedule_change_type == 'events':
+        await ChangeSchedule.waiting_for_events_excel.set()
+    elif schedule_change_type == 'events_clarification':
+        await ChangeSchedule.waiting_for_events_clarification_excel.set()
+
+    await call.message.edit_text('Отправь excel файл нового расписания.\n'
+                                 '/schedule_template - чтобы посмотреть шаблон')
+
+    await call.answer()
+
+
+async def change_events_clarification(m: types.Message, repo: Repo, state: FSMContext):
+    await state.finish()
+
     file_name = 'clarification.xlsx'
 
     bot = Bot.get_current()
@@ -44,6 +76,15 @@ async def change_events_clarification(m: types.Message, repo: Repo):
 
 
 def register_change_schedule(dp: Dispatcher):
-    dp.register_message_handler(send_events_clarification_excel_template, commands=['schedule_template'], state='*', role=UserRole.ADMIN)
     dp.register_message_handler(
-        change_events_clarification, content_types=types.message.ContentType.DOCUMENT, state='*', role=UserRole.ADMIN)
+        start_changing_schedule, commands=['change_schedule'],
+        state='*', role=UserRole.ADMIN)
+    dp.register_callback_query_handler(
+        schedule_change_type_chosen, text_startswith='schedule_change_type',
+        state=ChangeSchedule.waiting_for_schedule_change_type, role=UserRole.ADMIN)
+    dp.register_message_handler(
+        change_events_clarification, content_types=types.message.ContentType.DOCUMENT,
+        state=ChangeSchedule.waiting_for_events_clarification_excel, role=UserRole.ADMIN)
+    dp.register_message_handler(
+        send_events_clarification_excel_template,
+        commands=['schedule_template'], state='*', role=UserRole.ADMIN)
