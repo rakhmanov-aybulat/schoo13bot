@@ -45,7 +45,7 @@ def create_events_clarification_excel_template(
         clarification_list: Iterable[EventClarification]):
     workbook = Workbook()
     sheet = workbook.active
-    sheet.title = 'events'
+    sheet.title = 'events_clarification'
 
     # Add grades
     sheet.append([g for g in grade_list])
@@ -82,7 +82,7 @@ def create_events_clarification_excel_template(
 
 def parse_events_clarification_excel(file_name: str) -> Tuple[EventClarification]:
     workbook = load_workbook(file_name)
-    sheet = workbook['events']
+    sheet = workbook['events_clarification']
 
     clarification_list = []
     for row in sheet[2:sheet.max_row]:

@@ -19,10 +19,10 @@ async def send_events_clarification_excel_template(m: types.Message, repo: Repo)
     grade_list = await repo.get_grade_list()
     event_list = await repo.get_event_list()
     clarification_list = await repo.get_clarification_list()
-    file_name = 'events.xlsx'
+    file_name = 'events_clarification_template.xlsx'
     create_events_clarification_excel_template(file_name, grade_list, event_list, clarification_list)
 
-    file = types.InputFile(file_name, 'Расписание Шаблон.xlsx')
+    file = types.InputFile(file_name, 'Уточнение событий Шаблон.xlsx')
     await m.answer_document(file)
 
 
