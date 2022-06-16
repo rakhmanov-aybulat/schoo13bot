@@ -80,6 +80,19 @@ def create_events_clarification_excel_template(
     workbook.save(file_name)
 
 
+def create_events_excel_template(file_name: str, event_list: Iterable[Event]):
+    workbook = Workbook()
+    sheet = workbook.active
+    sheet.title = 'events'
+
+    sheet.append(['event_name', 'weekday', 'event_start', 'event_end'])
+
+    for e in event_list:
+        sheet.append([e.name, e.weekday, e.start, e.end])
+
+    workbook.save(file_name)
+
+
 def parse_events_clarification_excel(file_name: str) -> Tuple[EventClarification]:
     workbook = load_workbook(file_name)
     sheet = workbook['events_clarification']
@@ -94,3 +107,17 @@ def parse_events_clarification_excel(file_name: str) -> Tuple[EventClarification
                 clarification_list.append(clarification)
 
     return tuple(clarification_list)
+
+
+def parse_events_excel(file_name: str) -> Tuple[Event]:
+    workbook = load_workbook(file_name)
+    sheet = workbook['events']
+
+    event_list = []
+    for row in sheet[2:sheet.max_row]:
+        row = tuple(map(lambda cell: cell.value, row))
+        (event_name, weekday, event_start, event_end) = row
+
+        event_list.append(Event(177013, event_name, None, weekday, event_start, event_end))
+
+    return tuple(event_list)

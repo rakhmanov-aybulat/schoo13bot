@@ -192,7 +192,7 @@ class Repo:
         with self.conn as conn:
             with conn.cursor() as cursor:
                 cursor.execute(
-                    sql.SQL('TRUNCATE TABLE {}')
+                    sql.SQL('TRUNCATE TABLE {} CASCADE')
                     .format(sql.Identifier(table_name)))
 
     async def add_events_clarification(self, events_clarification_list: Iterable[EventClarification]) -> None:
@@ -204,3 +204,14 @@ class Repo:
                         INSERT INTO events_clarification
                         VALUES (%s, %s, %s)
                         ''', (ec.event_id, ec.grade, ec.clarification))
+
+    async def add_events(self, event_list: Iterable[Event]) -> None:
+        with self.conn as conn:
+            with conn.cursor() as cursor:
+                for e in event_list:
+                    cursor.execute(
+                        '''
+                        INSERT INTO event_schedule 
+                        (event_name, weekday, event_start, event_end)
+                        VALUES (%s, %s, %s, %s)
+                        ''', (e.name, e.weekday, e.start, e.end))
