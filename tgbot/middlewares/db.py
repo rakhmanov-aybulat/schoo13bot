@@ -1,4 +1,7 @@
+from aiogram import types
 from aiogram.dispatcher.middlewares import LifetimeControllerMiddleware
+from aiogram.dispatcher.handler import CancelHandler
+from psycopg2.pool import PoolError
 
 from ..services.repository import Repo
 
@@ -11,9 +14,18 @@ class DbMiddleware(LifetimeControllerMiddleware):
         self.pool = pool
 
     async def pre_process(self, obj, data, *args):
-        db = self.pool.getconn()
-        data["db"] = db
-        data["repo"] = Repo(db)
+        try:
+            db = self.pool.getconn()
+            data["db"] = db
+            data["repo"] = Repo(db)
+        except PoolError as e:
+            if isinstance(obj, types.Message):
+                await obj.answer('Ошибка, попробуй снова')
+            elif isinstance(obj, types.CallbackQuery):
+                await obj.message.edit_text('Ошибка, попробуй снова')
+                await obj.answer('Слишком много подключений к базе')
+
+            raise CancelHandler()
 
     async def post_process(self, obj, data, *args):
         del data["repo"]
