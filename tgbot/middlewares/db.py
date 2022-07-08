@@ -1,9 +1,14 @@
+import logging
+
 from aiogram import types
 from aiogram.dispatcher.middlewares import LifetimeControllerMiddleware
 from aiogram.dispatcher.handler import CancelHandler
 from psycopg2.pool import PoolError
 
 from ..services.repository import Repo
+
+
+logger = logging.getLogger(__name__)
 
 
 class DbMiddleware(LifetimeControllerMiddleware):
@@ -19,6 +24,8 @@ class DbMiddleware(LifetimeControllerMiddleware):
             data["db"] = db
             data["repo"] = Repo(db)
         except PoolError as e:
+            logger.error(e)
+
             if isinstance(obj, types.Message):
                 await obj.answer('Ошибка, попробуй снова')
             elif isinstance(obj, types.CallbackQuery):

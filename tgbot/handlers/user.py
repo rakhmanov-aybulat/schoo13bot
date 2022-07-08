@@ -1,8 +1,12 @@
+import logging
+
 from aiogram import Dispatcher, types
 from psycopg2.errors import UniqueViolation
 
 from ..handlers.grades import start_grade, gen_ask_schedule_markup
 from ..services.repository import Repo
+
+logger = logging.getLogger(__name__)
 
 
 async def user_start(m: types.Message, repo: Repo):
@@ -24,6 +28,9 @@ async def user_start(m: types.Message, repo: Repo):
         markup = gen_ask_schedule_markup()
         await m.answer(
             'Спроси меня: "Сколько минут до звонка?"', reply_markup=markup)
+    else:
+        logger.info(f'New user: first_name: {first_name}, last_name: {last_name}, '
+                    f'username: {user_name}, chat_id: {chat_id}')
 
 
 def register_user(dp: Dispatcher):

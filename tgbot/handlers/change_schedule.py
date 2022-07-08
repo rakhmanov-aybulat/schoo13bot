@@ -1,4 +1,5 @@
 import os
+import logging
 
 from aiogram import Bot, Dispatcher, types
 from aiogram.dispatcher import FSMContext
@@ -8,6 +9,9 @@ from ..models.role import UserRole
 from ..services.repository import Repo
 from ..services.excel import create_events_clarification_excel_template, \
     create_events_excel_template, parse_events_clarification_excel, parse_events_excel
+
+
+logger = logging.getLogger(__name__)
 
 
 class ChangeSchedule(StatesGroup):
@@ -83,10 +87,13 @@ async def change_events_clarification(m: types.Message, repo: Repo, state: FSMCo
         await repo.truncate_table('events_clarification')
 
         await repo.add_events_clarification(clarification_list)
-    except Exception:
+    except Exception as e:
+        logger.error(e)
+
         await m.answer('Что-то пошло не так ')
         raise Exception
     else:
+        logger.info('Events clarifications were changed')
         await m.answer('Уточнения событий изменены')
 
     if os.path.exists(file_name):
@@ -106,10 +113,12 @@ async def change_events(m: types.Message, repo: Repo, state: FSMContext):
         await repo.truncate_table('event_schedule')
 
         await repo.add_events(event_list)
-    except Exception:
+    except Exception as e:
+        logger.error(e)
         await m.answer('Что-то пошло не так ')
         raise Exception
     else:
+        logger.info('Events were changed')
         await m.answer('События изменены')
 
     if os.path.exists(file_name):
