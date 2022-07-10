@@ -1,4 +1,4 @@
-import configparser
+from os import environ
 from dataclasses import dataclass
 
 
@@ -29,16 +29,17 @@ def cast_bool(value: str) -> bool:
     return value.lower() in ("true", "t", "1", "yes")
 
 
-def load_config(path: str):
-    config = configparser.ConfigParser()
-    config.read(path)
-
-    tg_bot = config["tg_bot"]
-
+def load_config():
     return Config(
         tg_bot=TgBot(
-            token=tg_bot["token"],
-            admin_id=int(tg_bot["admin_id"]),
+            token=environ['TGBOT_TOKEN'],
+            admin_id=int(environ['TGBOT_ADMIN_ID']),
         ),
-        db=DbConfig(**config["db"]),
+        db=DbConfig(
+            host=environ['DB_HOST'],
+            database=environ['DB_DATABASE'],
+            user=environ['DB_USER'],
+            port=environ['DB_PORT'],
+            password=environ['DB_PASSWORD']
+        )
     )

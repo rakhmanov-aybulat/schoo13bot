@@ -36,7 +36,7 @@ async def main():
         format="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
     )
     logger.error("Starting bot")
-    config = load_config("bot.ini")
+    config = load_config()
 
     storage = MemoryStorage()
 
