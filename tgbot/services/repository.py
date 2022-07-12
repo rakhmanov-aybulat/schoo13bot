@@ -74,8 +74,8 @@ class Repo:
                     ORDER BY grade_number ASC;
                     ''')
                 numbers = cursor.fetchall()
-
-                if numbers is None:
+                
+                if len(numbers) == 0:
                     raise CantGetGradeNumberList
 
                 return tuple(map(lambda n: int(n[0]), numbers))
@@ -91,7 +91,7 @@ class Repo:
                     ''', (grade_number,))
                 letters = cursor.fetchall()
 
-                if letters is None:
+                if len(letters) == 0:
                     raise CantGetGradeLetterList
 
                 return tuple(map(lambda l: str(l[0]), letters))
