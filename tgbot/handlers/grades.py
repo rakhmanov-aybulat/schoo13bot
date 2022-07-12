@@ -1,3 +1,4 @@
+import logging
 import time
 from typing import Iterable
 
@@ -7,6 +8,9 @@ from aiogram.dispatcher.filters.state import State, StatesGroup
 
 from ..services.repository import Repo
 from ..exceptions import CantGetGradeNumberList, CantGetGradeLetterList
+
+
+logger = logging.getLogger(__name__)
 
 
 class ChangeGrade(StatesGroup):
@@ -40,6 +44,8 @@ async def start_grade(m: types.Message, repo: Repo) -> None:
     try:
         grade_number_list = await repo.get_grade_number_list()
     except CantGetGradeNumberList:
+        logger.error('Can\'t get grade number list')
+
         await m.answer('Что-то пошло не так')
         return
     markup = gen_grade_number_list_markup(grade_number_list)
@@ -55,6 +61,8 @@ async def grade_number_chosen(call: types.CallbackQuery, state: FSMContext, repo
     try:
         grade_letter_list = await repo.get_grade_letter_list(grade_number)
     except CantGetGradeLetterList:
+        logger.error('Can\'t get grade letter list')
+
         await state.finish()
         await call.message.edit_text('Что-то пошло не так')
         return
