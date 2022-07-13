@@ -3,7 +3,7 @@ import datetime
 from aiogram import Dispatcher, types
 
 from ..exceptions import CantGetCurrentAndNextEvents
-from ..models.db import CurrentAndNextEvents, Event
+from ..models.db import CurrentAndNextEvents
 from ..services.repository import Repo
 
 
