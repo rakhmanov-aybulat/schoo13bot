@@ -86,4 +86,4 @@ async def user_get_schedule(m: types.Message, repo: Repo) -> None:
 
 
 def register_schedule(dp: Dispatcher):
-    dp.register_message_handler(user_get_schedule, text='Сколько минут до звонка?')
+    dp.register_message_handler(user_get_schedule, text='Сколько минут до звонка?', state='*')
