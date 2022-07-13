@@ -107,7 +107,7 @@ async def end_grade(grade_number: int, grade_letter: str, m: types.Message, repo
 
 
 def register_grades(dp: Dispatcher):
-    dp.register_message_handler(start_grade, commands=['changegrade'], state='*')
+    dp.register_message_handler(start_grade, commands=['change_grade'], state='*')
     dp.register_callback_query_handler(
         grade_number_chosen, text_startswith='grade_number:', state=ChangeGrade.waiting_for_grade_number)
     dp.register_callback_query_handler(
