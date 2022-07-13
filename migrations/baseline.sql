@@ -36,7 +36,7 @@ CREATE TABLE grades (
 	grade_letter VARCHAR(1) NOT NULL
 );
 
-CREATE TABLE event_clarification (
+CREATE TABLE events_clarification (
 	event_id INT NOT NULL,
 	grade VARCHAR(255) REFERENCES grades(grade),
 	event_clarification VARCHAR(255) NOT NULL
